@@ -270,7 +270,7 @@ a.text-very-light-gray-hover:hover {color:#ededed !important;}
 .bg-white, .background-white {background-color:#fff;}
 .bg-black, .background-black {background-color:#000;}
 .bg-extra-dark-gray {background-color:#1c1c1c;}
-.bg-primary-blue {background-color:#1F5ABD;}
+.bg-primary-blue {background-color:#346fb5}
 .bg-dark-gray {background-color:#757575;}
 .bg-extra-medium-gray {background-color:#939393;}
 .bg-very-dark-gray {background-color:#121212;}
@@ -2661,7 +2661,7 @@ nav.navbar.sidebar-nav{border: none; display: inline-table; width: 290px; border
 .sidebar-part3 {position: absolute; bottom: 0;}
 .left-nav-on .sidebar-part2 {left: 0;}
 .sidebar-part2:before {width: 100%; height: 1px; background-color: #dfdfdf; content: ""; position: absolute;bottom: 75px; left: 0; display: inline-block}
-.sidebar-part2 .sidebar-middle {padding: 180px 0}
+.sidebar-part2 .sidebar-middle {padding: 100px 0}
 .sidebar-part2 .sidebar-middle-menu {display: table-cell; height: 100%; width: 100%; vertical-align: middle}
 .bottom-menu-icon {width:90px; padding: 22px 30px; text-align: center;}
 header .sidebar-part2 nav.navbar.bootsnav ul > li > a {font-size: 36px; display: block; padding: 0; color: #0f0f0f; text-transform: none; margin: 0; line-height: 40px; font-weight: 600; position: relative;}
@@ -2693,7 +2693,7 @@ header .sidebar-part2 nav.navbar.bootsnav ul.second-level li.active > a, header 
 .sidebar-part2 .navbar-collapse.collapse {overflow-y: auto !important;}
 
 .nav-icon span {display: block; position: absolute; height: 2px; width: 23px; background: #232323; border-radius: 0; opacity: 1; left: 0; -webkit-transform: rotate(0deg); -moz-transform: rotate(0deg); -o-transform: rotate(0deg); transform: rotate(0deg); -webkit-transition: .25s ease-in-out; -moz-transition: .25s ease-in-out; -o-transition: .25s ease-in-out; transition: .25s ease-in-out;}
-.nav-icon:hover span, .nav-icon.active span {background-color: red}
+.nav-icon:hover span, .nav-icon.active span {background-color: #346fb5}
 .nav-icon span:nth-child(1) {top: 0px;}
 .nav-icon span:nth-child(2),.nav-icon span:nth-child(3) {top: 8px;}
 .nav-icon span:nth-child(4) {top: 16px;}
