@@ -27,6 +27,13 @@
         <!-- style sheets -->
         <link rel="stylesheet" type="text/css" href="css/style.css" />
         <link rel="stylesheet" type="text/css" href="css/responsive.css" />
+        
+        <!-- Smooth scroll CSS -->
+        <style>
+            html {
+                scroll-behavior: smooth;
+            }
+        </style>
         <script type="text/javascript" src="revolution/js/extensions/revolution.extension.slideanims.min.js"></script>
     </head>
     <body class="left-nav-sidebar">
@@ -48,19 +55,19 @@
                                 <div id="navbar-menu" class="collapse navbar-collapse no-padding">
                                     <ul class="nav navbar-nav margin-80px-bottom">
                                         <li>
-                                            <a href="#" title="Home">Home</a>
+                                            <a href="#home" title="Home">Home</a>
                                         </li>
                                         <li>
-                                            <a href="#" title="Pages">Nosotros</a>
+                                            <a href="#nosotros" title="Nosotros">Nosotros</a>
                                         </li>
                                         <li>
-                                            <a href="#" title="Portfolio">Servicios</a>
+                                            <a href="#servicios" title="Servicios">Servicios</a>
                                         </li>
                                         <li>
-                                            <a href="#" title="Blog">Proyectos</a>
+                                            <a href="#proyectos" title="Proyectos">Proyectos</a>
                                         </li>
                                         <li>
-                                            <a href="#" title="Blog">Contacto</a>
+                                            <a href="#contacto" title="Contacto">Contacto</a>
                                         </li>
                                         <li>
                                             <div class="side-left-menu-close close-side"></div>
@@ -86,7 +93,7 @@
         </header>
         <!-- end header --> 
         <!-- start slider section -->
-        <section class="p-0 wow animate__fadeIn no-transition">
+        <section id="home" class="p-0 wow animate__fadeIn no-transition">
             <article class="content"> 
                 <img src="images/logos/logo-color-sin-fondo.png" alt="Raiz Creativa" class="logo-slider" style="position: absolute; top: 5%; left: 8%; width: 250px; z-index: 1000;">
                 <div id="rev_slider_151_1_wrapper" class="rev_slider_wrapperd fullscreenbanner" data-alias="blur-effect-slider" data-source="gallery" style="background-color:#2d3032;padding:0px;">
@@ -555,7 +562,7 @@
         </section>
         <!-- end slider section -->
         <!-- start section -->
-        <section class="wow animate__fadeIn">
+        <section id="nosotros" class="wow animate__fadeIn">
             <div class="container"> 
                 <div class="row align-items-center">
                     <div class="col-xl-3 col-sm-6 text-center xs-margin-15px-bottom wow animate__fadeIn">
@@ -580,7 +587,7 @@
         </section>
         <!-- end section -->
          <!-- start services showcase section -->
-        <section class="bg-primary-blue">
+        <section id="servicios" class="bg-primary-blue">
             <div class="container">                                
                 <div class="row row-cols-1 row-cols-lg-3 row-cols-sm-2">
                     <!-- start features box item -->
@@ -632,7 +639,7 @@
         
         
         <!-- start masonry portfolio section -->
-        <section class="pb-0 wow animate__fadeIn">
+        <section id="proyectos" class="pb-0 wow animate__fadeIn">
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-12 text-center margin-100px-bottom md-margin-70px-bottom sm-margin-50px-bottom">
@@ -853,7 +860,7 @@
         <!-- end masonry portfolio section -->
         
         <!-- start contact section -->
-        <section class="wow animate__fadeIn bg-extra-dark-gray">
+        <section id="contacto" class="wow animate__fadeIn bg-extra-dark-gray">
             <div class="container">
                 <div class="row row-cols-1 row-cols-lg-2 justify-content-center"> 
                     <div class="col padding-ten-right lg-padding-five-right md-padding-15px-right md-margin-five-bottom wow animate__fadeIn">
@@ -961,5 +968,29 @@
         <script type="text/javascript" src="revolution/js/extensions/revolution.extension.video.min.js"></script>-->
         <!-- setting -->
         <script type="text/javascript" src="js/main.js"></script>
+        
+        <!-- Smooth scroll navigation -->
+        <script type="text/javascript">
+            $(document).ready(function() {
+                // Smooth scroll para enlaces del menú lateral
+                $('.sidebar-part2 a[href^="#"]').on('click', function(e) {
+                    e.preventDefault();
+                    
+                    var target = $(this.getAttribute('href'));
+                    if (target.length) {
+                        // Cerrar el menú lateral removiendo la clase left-nav-on
+                        $('body').removeClass('left-nav-on');
+                        
+                        // Cambiar el icono de vuelta a hamburguesa (remover clase active)
+                        $('#showRightPush').removeClass('active');
+                        
+                        // Scroll suave a la sección
+                        $('html, body').animate({
+                            scrollTop: target.offset().top - 80
+                        }, 1000);
+                    }
+                });
+            });
+        </script>
     </body>
 </html>
