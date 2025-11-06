@@ -1,0 +1,66 @@
+# WordPress core
+/wp-admin/
+/wp-includes/
+/wp-*.php
+/xmlrpc.php
+/license.txt
+/readme.html
+index.php
+
+# WordPress config
+wp-config.php
+wp-config-sample.php
+
+# Uploads y cache
+/wp-content/uploads/
+/wp-content/cache/
+/wp-content/upgrade/
+
+# Plugins (no versionamos plugins)
+/wp-content/plugins/
+
+# Otros themes (solo versionamos el nuestro)
+/wp-content/themes/*
+!/wp-content/themes/originaria/
+
+# Mantener originaria-html
+!/originaria-html/
+
+# Database backups
+*.sql
+*.sql.gz
+
+# Log files
+*.log
+error_log
+debug.log
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Node modules (si usas npm)
+node_modules/
+
