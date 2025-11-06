@@ -13,10 +13,48 @@
     
     <?php wp_head(); ?>
     
-    <!-- Smooth scroll CSS -->
+    <!-- Vertical text CSS -->
     <style>
-        html {
-            scroll-behavior: smooth;
+        .vertical-text {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: rgba(40, 40, 40, 0.5);
+            text-transform: uppercase;
+            white-space: nowrap;
+            line-height: 1;
+        }
+        
+        .right-bg {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+        
+        /* Footer logo size */
+        .footer-logo {
+            max-width: 180px !important;
+            max-height: none !important;
+            width: 100%;
+            height: auto;
+        }
+        
+        /* Hide first image in "Nosotros" section on mobile */
+        @media (max-width: 767px) {
+            #nosotros .row .col-sm-6:nth-child(1) {
+                display: none !important;
+            }
+            
+            /* Reduce height of second image on mobile */
+            #nosotros .row .col-sm-6:nth-child(2) img {
+                max-height: 350px;
+                object-fit: cover;
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -60,7 +98,9 @@
                             </ul>
                         </div>  
                     </nav>
-                    <div class="right-bg"><img src="<?php echo get_template_directory_uri(); ?>/images/digital-text.png" alt="<?php bloginfo( 'name' ); ?>"></div>
+                    <div class="right-bg">
+                        <div class="vertical-text">RAÍZ CREATIVA</div>
+                    </div>
                 </div>
             </div>
         </div>
