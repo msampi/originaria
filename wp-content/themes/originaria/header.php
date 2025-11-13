@@ -43,6 +43,37 @@
             height: auto;
         }
         
+        /* Logo responsivo */
+        .logo-mobile {
+            display: none;
+        }
+        
+        @media (max-width: 991px) {
+            .logo-desktop {
+                display: none !important;
+            }
+            
+            .sidebar-part1 {
+                width: auto !important;
+                overflow: visible !important;
+            }
+            
+            .sidebar-part1 .logo {
+                position: relative;
+                width: auto !important;
+                display: inline-block !important;
+            }
+            
+            .logo-mobile {
+                display: block !important;
+                max-height: 40px !important;
+                width: 120px !important;
+                height: auto !important;
+                margin-top: 15px;
+                margin-left: 10px;
+            }
+        }
+        
         /* Hide first image in "Nosotros" section on mobile */
         @media (max-width: 767px) {
             #nosotros .row .col-sm-6:nth-child(1) {
@@ -56,6 +87,57 @@
                 width: 100%;
             }
         }
+        
+        /* Custom background color for portfolio hover */
+        .portfolio-img.bg-custom-blue {
+            background-color: #a6c8e9 !important;
+        }
+        
+        .btn-dark-gray {
+            background-color: #697480 !important;
+            border-color: #697480 !important;
+            color: #ffffff !important;
+        }
+        
+        .btn-dark-gray:hover,
+        .btn-dark-gray:focus {
+            background-color: transparent !important;
+            color: #697480 !important;
+            border-color: #697480 !important;
+        }
+        
+        /* Custom grid item sizes for projects */
+        .grid-4col .grid-item.size-ancho {
+            width: 50%;
+        }
+        
+        .grid-4col .grid-item.size-alto img {
+            height: auto;
+            min-height: 400px;
+            object-fit: cover;
+        }
+        
+        .grid-4col .grid-item.size-grande {
+            width: 50%;
+        }
+        
+        .grid-4col .grid-item.size-grande img {
+            height: auto;
+            min-height: 400px;
+            object-fit: cover;
+        }
+        
+        @media (max-width: 767px) {
+            .grid-4col .grid-item.size-ancho,
+            .grid-4col .grid-item.size-grande {
+                width: 100%;
+            }
+            
+            .grid-4col .grid-item.size-alto img,
+            .grid-4col .grid-item.size-grande img {
+                min-height: auto;
+            }
+        }
     </style>
 </head>
 <body <?php body_class( 'left-nav-sidebar' ); ?>>
@@ -67,7 +149,8 @@
         <!-- start logo -->
         <div class="sidebar-part1">
             <a href="<?php echo esc_url( home_url( '/' ) ); ?>" title="<?php bloginfo( 'name' ); ?>" class="logo">
-                <img src="<?php echo get_template_directory_uri(); ?>/images/logos/logo-vert-fondo-azul.png" data-at2x="<?php echo get_template_directory_uri(); ?>/images/logos/logo-vert-fondo-azul.png" alt="<?php bloginfo( 'name' ); ?>">
+                <img class="logo-desktop" src="<?php echo get_template_directory_uri(); ?>/images/logos/logo-vert-fondo-azul.png" data-at2x="<?php echo get_template_directory_uri(); ?>/images/logos/logo-vert-fondo-azul.png" alt="<?php bloginfo( 'name' ); ?>">
+                <img class="logo-mobile" src="<?php echo get_template_directory_uri(); ?>/images/logos/logo-color-sin-fondo.png" data-at2x="<?php echo get_template_directory_uri(); ?>/images/logos/logo-color-sin-fondo.png" alt="<?php bloginfo( 'name' ); ?>">
             </a> 
         </div>
         <!-- end logo -->

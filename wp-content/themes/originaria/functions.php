@@ -145,18 +145,25 @@ function originaria_fix_isotope() {
 	?>
 	<script type="text/javascript">
 		jQuery(window).on('load', function() {
-			// Asegurar que Isotope se inicialice correctamente
-			if (typeof jQuery.fn.isotope !== 'undefined') {
-				jQuery('.portfolio-wrapper').each(function() {
-					var $grid = jQuery(this);
-					if ($grid.length && $grid.hasClass('grid')) {
-						$grid.isotope('layout');
-					}
-				});
-			}
+			// Esperar un poco más para asegurar que Isotope esté completamente inicializado
+			setTimeout(function() {
+				if (typeof jQuery.fn.isotope !== 'undefined') {
+					jQuery('.portfolio-wrapper').each(function() {
+						var $grid = jQuery(this);
+						if ($grid.length && $grid.hasClass('grid')) {
+							// Verificar si ya está inicializado
+							if ($grid.data('isotope')) {
+								$grid.isotope('layout');
+								// Asegurar que los items sean visibles
+								$grid.find('.grid-item').css('visibility', 'visible');
+							}
+						}
+					});
+				}
+			}, 1000);
 		});
 		
-		// Suprimir errores específicos de theme-vendors que no afectan la funcionalidad
+		// Suprimir errores específicos de theme-vendors y revolution que no afectan la funcionalidad
 		window.addEventListener('error', function(e) {
 			// Suprimir errores de "Cannot read properties of null (reading 'nodeName')"
 			// que ocurren en theme-vendors.min.js sin afectar la funcionalidad
@@ -166,8 +173,203 @@ function originaria_fix_isotope() {
 				return true;
 			}
 		}, true);
+		
+		// Suprimir warnings de Revolution Slider sobre valores undefined
+		var originalConsoleWarn = console.warn;
+		console.warn = function() {
+			var message = arguments[0];
+			if (typeof message === 'string' && 
+			    (message.includes('invalid width tween value') || 
+			     message.includes('invalid height tween value'))) {
+				return;
+			}
+			originalConsoleWarn.apply(console, arguments);
+		};
 	</script>
 	<?php
 }
 add_action( 'wp_footer', 'originaria_fix_isotope', 999 );
+
+/**
+ * Register Custom Post Type: Proyectos
+ */
+function originaria_register_proyectos_cpt() {
+	$labels = array(
+		'name'               => 'Proyectos',
+		'singular_name'      => 'Proyecto',
+		'menu_name'          => 'Proyectos',
+		'add_new'            => 'Agregar Nuevo',
+		'add_new_item'       => 'Agregar Nuevo Proyecto',
+		'edit_item'          => 'Editar Proyecto',
+		'new_item'           => 'Nuevo Proyecto',
+		'view_item'          => 'Ver Proyecto',
+		'search_items'       => 'Buscar Proyectos',
+		'not_found'          => 'No se encontraron proyectos',
+		'not_found_in_trash' => 'No se encontraron proyectos en la papelera',
+	);
+
+	$args = array(
+		'labels'              => $labels,
+		'public'              => true,
+		'publicly_queryable'  => true,
+		'show_ui'             => true,
+		'show_in_menu'        => true,
+		'query_var'           => true,
+		'rewrite'             => array( 'slug' => 'proyecto' ),
+		'capability_type'     => 'post',
+		'has_archive'         => false,
+		'hierarchical'        => false,
+		'menu_position'       => 5,
+		'menu_icon'           => 'dashicons-portfolio',
+		'supports'            => array( 'title', 'thumbnail' ),
+	);
+
+	register_post_type( 'proyecto', $args );
+}
+add_action( 'init', 'originaria_register_proyectos_cpt' );
+
+/**
+ * Add Meta Boxes for Proyectos
+ */
+function originaria_add_proyecto_meta_boxes() {
+	add_meta_box(
+		'proyecto_details',
+		'Detalles del Proyecto',
+		'originaria_proyecto_meta_box_callback',
+		'proyecto',
+		'normal',
+		'high'
+	);
+}
+add_action( 'add_meta_boxes', 'originaria_add_proyecto_meta_boxes' );
+
+/**
+ * Meta Box Callback
+ */
+function originaria_proyecto_meta_box_callback( $post ) {
+	wp_nonce_field( 'originaria_save_proyecto_meta', 'originaria_proyecto_nonce' );
+	
+	$subtitulo = get_post_meta( $post->ID, '_proyecto_subtitulo', true );
+	$descripcion = get_post_meta( $post->ID, '_proyecto_descripcion', true );
+	$tamano = get_post_meta( $post->ID, '_proyecto_tamano', true );
+	$orden = get_post_meta( $post->ID, '_proyecto_orden', true );
+	?>
+	
+	<table class="form-table">
+		<tr>
+			<th><label for="proyecto_subtitulo">Subtítulo/Categoría</label></th>
+			<td>
+				<input type="text" id="proyecto_subtitulo" name="proyecto_subtitulo" value="<?php echo esc_attr( $subtitulo ); ?>" class="regular-text">
+				<p class="description">Ejemplo: Branding and Brochure</p>
+			</td>
+		</tr>
+		<tr>
+			<th><label for="proyecto_descripcion">Descripción</label></th>
+			<td>
+				<textarea id="proyecto_descripcion" name="proyecto_descripcion" rows="3" class="large-text"><?php echo esc_textarea( $descripcion ); ?></textarea>
+				<p class="description">Descripción breve del proyecto (opcional)</p>
+			</td>
+		</tr>
+		<tr>
+			<th><label for="proyecto_tamano">Tamaño en la grilla</label></th>
+			<td>
+				<select id="proyecto_tamano" name="proyecto_tamano">
+					<option value="normal" <?php selected( $tamano, 'normal' ); ?>>Normal (1 columna)</option>
+					<option value="ancho" <?php selected( $tamano, 'ancho' ); ?>>Ancho (2 columnas)</option>
+					<option value="alto" <?php selected( $tamano, 'alto' ); ?>>Alto (altura doble)</option>
+					<option value="grande" <?php selected( $tamano, 'grande' ); ?>>Grande (2x2)</option>
+				</select>
+				<p class="description">Define cómo se mostrará el proyecto en la grilla</p>
+			</td>
+		</tr>
+		<tr>
+			<th><label for="proyecto_orden">Orden de visualización</label></th>
+			<td>
+				<input type="number" id="proyecto_orden" name="proyecto_orden" value="<?php echo esc_attr( $orden ? $orden : 0 ); ?>" min="0" step="1">
+				<p class="description">Número para ordenar los proyectos (menor = primero)</p>
+			</td>
+		</tr>
+	</table>
+	
+	<div style="margin-top: 20px; padding: 15px; background: #f0f0f1; border-left: 4px solid #2271b1;">
+		<strong>Nota:</strong> No olvides establecer una imagen destacada para el proyecto en el panel lateral derecho.
+	</div>
+	<?php
+}
+
+/**
+ * Save Meta Box Data
+ */
+function originaria_save_proyecto_meta( $post_id ) {
+	// Verificar nonce
+	if ( ! isset( $_POST['originaria_proyecto_nonce'] ) || ! wp_verify_nonce( $_POST['originaria_proyecto_nonce'], 'originaria_save_proyecto_meta' ) ) {
+		return;
+	}
+
+	// Verificar autosave
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+
+	// Verificar permisos
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return;
+	}
+
+	// Guardar subtítulo
+	if ( isset( $_POST['proyecto_subtitulo'] ) ) {
+		update_post_meta( $post_id, '_proyecto_subtitulo', sanitize_text_field( $_POST['proyecto_subtitulo'] ) );
+	}
+
+	// Guardar descripción
+	if ( isset( $_POST['proyecto_descripcion'] ) ) {
+		update_post_meta( $post_id, '_proyecto_descripcion', sanitize_textarea_field( $_POST['proyecto_descripcion'] ) );
+	}
+
+	// Guardar tamaño
+	if ( isset( $_POST['proyecto_tamano'] ) ) {
+		$tamano_permitido = array( 'normal', 'ancho', 'alto', 'grande' );
+		$tamano = sanitize_text_field( $_POST['proyecto_tamano'] );
+		if ( in_array( $tamano, $tamano_permitido ) ) {
+			update_post_meta( $post_id, '_proyecto_tamano', $tamano );
+		}
+	}
+
+	// Guardar orden
+	if ( isset( $_POST['proyecto_orden'] ) ) {
+		update_post_meta( $post_id, '_proyecto_orden', absint( $_POST['proyecto_orden'] ) );
+	}
+}
+add_action( 'save_post_proyecto', 'originaria_save_proyecto_meta' );
+
+/**
+ * Customize login logo
+ */
+function originaria_custom_login_logo() {
+	$logo_url = get_template_directory_uri() . '/images/logos/logo-color-sin-fondo.png';
+	?>
+	<style type="text/css">
+		body.login div#login h1 a {
+			background-image: url('<?php echo esc_url( $logo_url ); ?>');
+			height: 50px;
+			width: 220px;
+			background-size: contain;
+			background-repeat: no-repeat;
+			background-position: center;
+			padding-bottom: 0;
+		}
+	</style>
+	<?php
+}
+add_action( 'login_enqueue_scripts', 'originaria_custom_login_logo' );
+
+function originaria_custom_login_logo_url() {
+	return home_url( '/' );
+}
+add_filter( 'login_headerurl', 'originaria_custom_login_logo_url' );
+
+function originaria_custom_login_logo_title() {
+	return get_bloginfo( 'name' );
+}
+add_filter( 'login_headertitle', 'originaria_custom_login_logo_title' );
 
