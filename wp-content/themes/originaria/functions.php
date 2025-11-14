@@ -343,6 +343,106 @@ function originaria_save_proyecto_meta( $post_id ) {
 add_action( 'save_post_proyecto', 'originaria_save_proyecto_meta' );
 
 /**
+ * Dynamic logo swap on scroll
+ */
+function originaria_dynamic_logo_script() {
+	$theme_uri = get_template_directory_uri();
+	$logos     = array(
+		'home'      => $theme_uri . '/images/logos/originaria-logo-pictograma.svg',
+		'nosotros'  => $theme_uri . '/images/logos/originaria-pictograma-01.svg',
+		'servicios' => $theme_uri . '/images/logos/originaria-pictograma-02.svg',
+		'proyectos' => $theme_uri . '/images/logos/originaria-pictograma-03.svg',
+	);
+	?>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			const logo = document.getElementById('logo-desktop');
+			if (!logo) return;
+
+			const logoMap = <?php echo wp_json_encode( $logos ); ?>;
+			const sections = Object.keys(logoMap)
+				.map(id => {
+					const el = document.getElementById(id);
+					if (!el) return null;
+					return { id, el, logo: logoMap[id] };
+				})
+				.filter(Boolean)
+				.sort((a, b) => a.el.offsetTop - b.el.offsetTop);
+
+			let currentSrc = logo.getAttribute('src') || logoMap.home;
+			logo.setAttribute('src', currentSrc);
+			let isTransitioning = false;
+			const fadeDuration = 220;
+
+			const swapLogo = (newSrc) => {
+				if (!newSrc || currentSrc === newSrc || isTransitioning) return;
+
+				isTransitioning = true;
+				const preload = new Image();
+
+				preload.onload = () => {
+					logo.classList.add('is-switching');
+
+					setTimeout(() => {
+						logo.setAttribute('src', newSrc);
+						currentSrc = newSrc;
+
+						requestAnimationFrame(() => {
+							logo.classList.remove('is-switching');
+							setTimeout(() => {
+								isTransitioning = false;
+							}, fadeDuration);
+						});
+					}, fadeDuration);
+				};
+
+				preload.onerror = () => {
+					isTransitioning = false;
+				};
+
+				preload.src = newSrc;
+			};
+
+			const updateLogo = () => {
+				if (window.innerWidth <= 991) {
+					// Restaurar logo original en mobile
+					swapLogo(logoMap.home);
+					return;
+				}
+
+				const viewportPointer = window.scrollY + window.innerHeight * 0.25;
+				let activeLogo = logoMap.home;
+
+				for (let i = 0; i < sections.length; i++) {
+					const section = sections[i];
+					const top = section.el.offsetTop;
+					const bottom = top + section.el.offsetHeight;
+
+					if (viewportPointer >= top && viewportPointer < bottom) {
+						activeLogo = section.logo;
+						break;
+					}
+
+					if (viewportPointer >= bottom) {
+						activeLogo = section.logo;
+					}
+				}
+
+				swapLogo(activeLogo);
+			};
+
+			updateLogo();
+			setTimeout(updateLogo, 350);
+			setTimeout(updateLogo, 1000);
+			window.addEventListener('scroll', updateLogo);
+			window.addEventListener('resize', updateLogo);
+		});
+	</script>
+	<?php
+}
+add_action( 'wp_footer', 'originaria_dynamic_logo_script', 1200 );
+
+/**
  * Customize login logo
  */
 function originaria_custom_login_logo() {

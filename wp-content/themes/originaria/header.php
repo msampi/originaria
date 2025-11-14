@@ -22,7 +22,7 @@
         <!-- start logo -->
         <div class="sidebar-part1">
             <a href="<?php echo esc_url( home_url( '/' ) ); ?>" title="<?php bloginfo( 'name' ); ?>" class="logo">
-                <img class="logo-desktop" src="<?php echo get_template_directory_uri(); ?>/images/logos/logo-vert-fondo-azul.png" data-at2x="<?php echo get_template_directory_uri(); ?>/images/logos/logo-vert-fondo-azul.png" alt="<?php bloginfo( 'name' ); ?>">
+                <img id="logo-desktop" class="logo-desktop" src="<?php echo get_template_directory_uri(); ?>/images/logos/originaria-logo-pictograma.svg" data-at2x="<?php echo get_template_directory_uri(); ?>/images/logos/originaria-logo-pictograma.svg" alt="<?php bloginfo( 'name' ); ?>">
                 <img class="logo-mobile" src="<?php echo get_template_directory_uri(); ?>/images/logos/logo-color-sin-fondo.png" data-at2x="<?php echo get_template_directory_uri(); ?>/images/logos/logo-color-sin-fondo.png" alt="<?php bloginfo( 'name' ); ?>">
             </a> 
         </div>

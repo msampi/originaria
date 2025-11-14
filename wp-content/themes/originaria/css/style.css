@@ -3984,6 +3984,15 @@ aside .instafeed-grid.gutter-extra-large, footer .instafeed-grid.gutter-extra-la
     color: #a6c8e9 !important;
 }
 
+#logo-desktop {
+    transition: opacity 0.35s ease-in-out;
+    opacity: 1;
+}
+
+#logo-desktop.is-switching {
+    opacity: 0;
+}
+
 .btn-dark-gray {
     background-color: #697480 !important;
     border-color: #697480 !important;
