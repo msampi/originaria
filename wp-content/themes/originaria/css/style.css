@@ -3880,3 +3880,152 @@ aside .instafeed-grid.gutter-extra-large, footer .instafeed-grid.gutter-extra-la
   padding: 40px;
   display: none;
 }
+.vertical-text {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: rgba(40, 40, 40, 0.5);
+    text-transform: uppercase;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+.right-bg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+/* Footer logo size */
+.footer-logo {
+    max-width: 180px !important;
+    max-height: none !important;
+    width: 100%;
+    height: auto;
+}
+
+/* Logo responsivo */
+.logo-mobile {
+    display: none;
+}
+
+@media (max-width: 991px) {
+    .logo-desktop {
+        display: none !important;
+    }
+    
+    .sidebar-part1 {
+        width: auto !important;
+        overflow: visible !important;
+    }
+    
+    .sidebar-part1 .logo {
+        position: relative;
+        width: auto !important;
+        display: inline-block !important;
+    }
+    
+    .logo-mobile {
+        display: block !important;
+        max-height: 40px !important;
+        width: 120px !important;
+        height: auto !important;
+        margin-top: 15px;
+        margin-left: 10px;
+    }
+}
+
+/* Hide first image in "Nosotros" section on mobile */
+@media (max-width: 767px) {
+    #nosotros .row .col-sm-6:nth-child(1) {
+        display: none !important;
+    }
+    
+    /* Reduce height of second image on mobile */
+    #nosotros .row .col-sm-6:nth-child(2) img {
+        max-height: 350px;
+        object-fit: cover;
+        width: 100%;
+    }
+}
+
+/* Custom background color for portfolio hover */
+.portfolio-img.bg-custom-blue {
+    background-color: #a6c8e9 !important;
+}
+
+.bg-contact-gray {
+    background-color: #697480 !important;
+}
+
+#contacto .highlight-text {
+    color: #a6c8e9 !important;
+}
+
+.service-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 70px;
+    margin-bottom: 20px;
+}
+
+.service-icon {
+    height: 60px;
+    width: auto;
+    filter: brightness(0) saturate(100%) invert(80%) sepia(9%) saturate(900%) hue-rotate(176deg) brightness(97%) contrast(90%);
+}
+
+.service-icon-wrapper i {
+    color: #a6c8e9 !important;
+}
+
+.btn-dark-gray {
+    background-color: #697480 !important;
+    border-color: #697480 !important;
+    color: #ffffff !important;
+}
+
+.btn-dark-gray:hover,
+.btn-dark-gray:focus {
+    background-color: transparent !important;
+    color: #697480 !important;
+    border-color: #697480 !important;
+}
+
+/* Custom grid item sizes for projects */
+.grid-4col .grid-item.size-ancho {
+    width: 50%;
+}
+
+.grid-4col .grid-item.size-alto img {
+    height: auto;
+    min-height: 400px;
+    object-fit: cover;
+}
+
+.grid-4col .grid-item.size-grande {
+    width: 50%;
+}
+
+.grid-4col .grid-item.size-grande img {
+    height: auto;
+    min-height: 400px;
+    object-fit: cover;
+}
+
+@media (max-width: 767px) {
+    .grid-4col .grid-item.size-ancho,
+    .grid-4col .grid-item.size-grande {
+        width: 100%;
+    }
+    
+    .grid-4col .grid-item.size-alto img,
+    .grid-4col .grid-item.size-grande img {
+        min-height: auto;
+    }
+}

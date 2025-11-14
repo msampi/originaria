@@ -1855,7 +1855,7 @@
                 var _this = $(this);
                 // remove perticular element from WOW array when you don't want animation on element after DOM lead
                 try {
-                    wow.removeBox(this);
+                wow.removeBox(this);
                 } catch(e) {
                     // Silently handle if removeBox fails
                 }
