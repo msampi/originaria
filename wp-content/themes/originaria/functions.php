@@ -244,6 +244,17 @@ function originaria_add_proyecto_meta_boxes() {
 add_action( 'add_meta_boxes', 'originaria_add_proyecto_meta_boxes' );
 
 /**
+ * Enqueue media uploader scripts for admin
+ */
+function originaria_enqueue_admin_scripts( $hook ) {
+	global $post_type;
+	if ( ( $hook == 'post.php' || $hook == 'post-new.php' ) && $post_type == 'proyecto' ) {
+		wp_enqueue_media();
+	}
+}
+add_action( 'admin_enqueue_scripts', 'originaria_enqueue_admin_scripts' );
+
+/**
  * Meta Box Callback
  */
 function originaria_proyecto_meta_box_callback( $post ) {
@@ -253,6 +264,11 @@ function originaria_proyecto_meta_box_callback( $post ) {
 	$descripcion = get_post_meta( $post->ID, '_proyecto_descripcion', true );
 	$tamano = get_post_meta( $post->ID, '_proyecto_tamano', true );
 	$orden = get_post_meta( $post->ID, '_proyecto_orden', true );
+	$imagen_detalle = get_post_meta( $post->ID, '_proyecto_imagen_detalle', true );
+	$imagen_detalle_url = '';
+	if ( $imagen_detalle ) {
+		$imagen_detalle_url = wp_get_attachment_image_url( $imagen_detalle, 'full' );
+	}
 	?>
 	
 	<table class="form-table">
@@ -268,6 +284,24 @@ function originaria_proyecto_meta_box_callback( $post ) {
 			<td>
 				<textarea id="proyecto_descripcion" name="proyecto_descripcion" rows="3" class="large-text"><?php echo esc_textarea( $descripcion ); ?></textarea>
 				<p class="description">Descripción breve del proyecto (opcional)</p>
+			</td>
+		</tr>
+		<tr>
+			<th><label for="proyecto_imagen_detalle">Imagen de detalle</label></th>
+			<td>
+				<input type="hidden" id="proyecto_imagen_detalle" name="proyecto_imagen_detalle" value="<?php echo esc_attr( $imagen_detalle ); ?>">
+				<div id="proyecto_imagen_detalle_preview" style="margin-bottom: 10px;">
+					<?php if ( $imagen_detalle_url ) : ?>
+						<img src="<?php echo esc_url( $imagen_detalle_url ); ?>" style="max-width: 300px; height: auto; display: block; margin-bottom: 10px;">
+					<?php endif; ?>
+				</div>
+				<button type="button" class="button" id="proyecto_imagen_detalle_button">
+					<?php echo $imagen_detalle ? 'Cambiar imagen' : 'Seleccionar imagen'; ?>
+				</button>
+				<button type="button" class="button" id="proyecto_imagen_detalle_remove" style="<?php echo $imagen_detalle ? '' : 'display:none;'; ?>">
+					Eliminar imagen
+				</button>
+				<p class="description">Imagen que se mostrará en el modal de detalle. Si no se selecciona, se usará la imagen destacada.</p>
 			</td>
 		</tr>
 		<tr>
@@ -292,8 +326,49 @@ function originaria_proyecto_meta_box_callback( $post ) {
 	</table>
 	
 	<div style="margin-top: 20px; padding: 15px; background: #f0f0f1; border-left: 4px solid #2271b1;">
-		<strong>Nota:</strong> No olvides establecer una imagen destacada para el proyecto en el panel lateral derecho.
+		<strong>Nota:</strong> No olvides establecer una imagen destacada para el proyecto en el panel lateral derecho (se usará en la grilla).
 	</div>
+	
+	<script type="text/javascript">
+	jQuery(document).ready(function($) {
+		var mediaUploader;
+		
+		$('#proyecto_imagen_detalle_button').on('click', function(e) {
+			e.preventDefault();
+			
+			if (mediaUploader) {
+				mediaUploader.open();
+				return;
+			}
+			
+			mediaUploader = wp.media({
+				title: 'Seleccionar imagen de detalle',
+				button: {
+					text: 'Usar esta imagen'
+				},
+				multiple: false
+			});
+			
+			mediaUploader.on('select', function() {
+				var attachment = mediaUploader.state().get('selection').first().toJSON();
+				$('#proyecto_imagen_detalle').val(attachment.id);
+				$('#proyecto_imagen_detalle_preview').html('<img src="' + attachment.url + '" style="max-width: 300px; height: auto; display: block; margin-bottom: 10px;">');
+				$('#proyecto_imagen_detalle_button').text('Cambiar imagen');
+				$('#proyecto_imagen_detalle_remove').show();
+			});
+			
+			mediaUploader.open();
+		});
+		
+		$('#proyecto_imagen_detalle_remove').on('click', function(e) {
+			e.preventDefault();
+			$('#proyecto_imagen_detalle').val('');
+			$('#proyecto_imagen_detalle_preview').html('');
+			$('#proyecto_imagen_detalle_button').text('Seleccionar imagen');
+			$(this).hide();
+		});
+	});
+	</script>
 	<?php
 }
 
@@ -338,6 +413,16 @@ function originaria_save_proyecto_meta( $post_id ) {
 	// Guardar orden
 	if ( isset( $_POST['proyecto_orden'] ) ) {
 		update_post_meta( $post_id, '_proyecto_orden', absint( $_POST['proyecto_orden'] ) );
+	}
+
+	// Guardar imagen de detalle
+	if ( isset( $_POST['proyecto_imagen_detalle'] ) ) {
+		$imagen_detalle = absint( $_POST['proyecto_imagen_detalle'] );
+		if ( $imagen_detalle > 0 ) {
+			update_post_meta( $post_id, '_proyecto_imagen_detalle', $imagen_detalle );
+		} else {
+			delete_post_meta( $post_id, '_proyecto_imagen_detalle' );
+		}
 	}
 }
 add_action( 'save_post_proyecto', 'originaria_save_proyecto_meta' );
@@ -472,4 +557,57 @@ function originaria_custom_login_logo_title() {
 	return get_bloginfo( 'name' );
 }
 add_filter( 'login_headertitle', 'originaria_custom_login_logo_title' );
+
+/**
+ * Modal de proyectos - JavaScript
+ */
+function originaria_proyecto_modal_script() {
+	?>
+	<script type="text/javascript">
+		jQuery(document).ready(function($) {
+			// Abrir modal al hacer clic en un proyecto
+			$(document).on('click', '.proyecto-modal-trigger', function(e) {
+				e.preventDefault();
+				
+				var $trigger = $(this);
+				var titulo = $trigger.data('proyecto-titulo') || '';
+				var subtitulo = $trigger.data('proyecto-subtitulo') || '';
+				var descripcion = $trigger.data('proyecto-descripcion') || '';
+				var imagen = $trigger.data('proyecto-imagen') || '';
+				
+				// Llenar el modal con los datos
+				$('#proyecto-modal-titulo').text(titulo);
+				$('#proyecto-modal-subtitulo').text(subtitulo);
+				$('#proyecto-modal-descripcion').html(descripcion);
+				$('#proyecto-modal-img').attr('src', imagen).attr('alt', titulo);
+				
+				// Mostrar el modal
+				$('#proyecto-modal').addClass('active');
+				$('body').addClass('modal-open');
+			});
+			
+			// Cerrar modal al hacer clic en la cruz
+			$(document).on('click', '.proyecto-modal-close, .proyecto-modal-overlay', function(e) {
+				e.preventDefault();
+				$('#proyecto-modal').removeClass('active');
+				$('body').removeClass('modal-open');
+			});
+			
+			// Cerrar modal con tecla ESC
+			$(document).on('keydown', function(e) {
+				if (e.key === 'Escape' && $('#proyecto-modal').hasClass('active')) {
+					$('#proyecto-modal').removeClass('active');
+					$('body').removeClass('modal-open');
+				}
+			});
+			
+			// Prevenir que el clic en el contenido del modal lo cierre
+			$(document).on('click', '.proyecto-modal-container', function(e) {
+				e.stopPropagation();
+			});
+		});
+	</script>
+	<?php
+}
+add_action( 'wp_footer', 'originaria_proyecto_modal_script' );
 
