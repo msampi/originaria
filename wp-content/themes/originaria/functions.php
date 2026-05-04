@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Define theme version
  */
-define( 'ORIGINARIA_VERSION', '1.0.0' );
+define( 'ORIGINARIA_VERSION', '1.0.1' );
 
 /**
  * Theme setup
@@ -565,6 +565,86 @@ function originaria_proyecto_modal_script() {
 	?>
 	<script type="text/javascript">
 		jQuery(document).ready(function($) {
+			// Inicializar Isotope en cada slide del carousel
+			function initCarouselIsotope() {
+				$('.proyectos-carousel-grid').each(function() {
+					var $grid = $(this);
+					if ($grid.length && typeof $.fn.isotope !== 'undefined') {
+						$grid.imagesLoaded(function() {
+							$grid.removeClass('grid-loading');
+							$grid.isotope({
+								layoutMode: 'masonry',
+								itemSelector: '.grid-item',
+								percentPosition: true,
+								masonry: {
+									columnWidth: '.grid-sizer',
+								}
+							});
+							
+							// Establecer altura mínima después de que Isotope se inicialice
+							setCarouselSlideMinHeight();
+						});
+					}
+				});
+			}
+			
+			// Variable para almacenar la altura mínima
+			var carouselMinHeight = 0;
+			
+			// Establecer altura mínima para todos los slides basándose en el primero
+			function setCarouselSlideMinHeight() {
+				// Si ya tenemos una altura mínima establecida, usarla
+				if (carouselMinHeight > 0) {
+					$('.carousel-item .proyectos-carousel-grid').css('min-height', carouselMinHeight + 'px');
+					return;
+				}
+				
+				// Calcular altura del primer slide (el que está activo inicialmente)
+				var $firstSlide = $('.carousel-item:first-child .proyectos-carousel-grid');
+				if ($firstSlide.length) {
+					// Esperar a que Isotope termine de calcular
+					setTimeout(function() {
+						var firstSlideHeight = $firstSlide.outerHeight(true);
+						if (firstSlideHeight > 0) {
+							carouselMinHeight = firstSlideHeight;
+							// Aplicar altura mínima a todos los slides
+							$('.carousel-item .proyectos-carousel-grid').css('min-height', carouselMinHeight + 'px');
+						}
+					}, 500);
+				}
+			}
+			
+			// Inicializar cuando se carga la página
+			initCarouselIsotope();
+			
+			// Reinicializar Isotope cuando cambia el slide del carousel
+			if (typeof bootstrap !== 'undefined') {
+				var carouselElement = document.getElementById('proyectosCarousel');
+				if (carouselElement) {
+					// Inicializar carousel sin auto-play
+					var carousel = new bootstrap.Carousel(carouselElement, {
+						interval: false, // Sin auto-play
+						wrap: true,
+						keyboard: false, // Desactivar navegación con teclado
+						touch: true // Permitir swipe en móviles
+					});
+					
+					// Asegurar que no haya auto-play
+					carousel._config.interval = false;
+					
+					carouselElement.addEventListener('slid.bs.carousel', function() {
+						// Esperar un poco para que el slide se muestre completamente
+						setTimeout(function() {
+							initCarouselIsotope();
+							// Aplicar altura mínima si ya está establecida
+							if (carouselMinHeight > 0) {
+								$('.carousel-item .proyectos-carousel-grid').css('min-height', carouselMinHeight + 'px');
+							}
+						}, 100);
+					});
+				}
+			}
+			
 			// Abrir modal al hacer clic en un proyecto
 			$(document).on('click', '.proyecto-modal-trigger', function(e) {
 				e.preventDefault();
@@ -610,4 +690,387 @@ function originaria_proyecto_modal_script() {
 	<?php
 }
 add_action( 'wp_footer', 'originaria_proyecto_modal_script' );
+
+/**
+ * Configurar PHPMailer para usar SMTP
+ */
+function originaria_configure_smtp( $phpmailer ) {
+	if ( defined( 'MAIL_HOST' ) && defined( 'MAIL_USERNAME' ) && defined( 'MAIL_PASSWORD' ) ) {
+		$phpmailer->isSMTP();
+		$phpmailer->Host       = MAIL_HOST;
+		$phpmailer->SMTPAuth   = true;
+		$phpmailer->Port       = defined( 'MAIL_PORT' ) ? MAIL_PORT : 2525;
+		$phpmailer->Username   = MAIL_USERNAME;
+		$phpmailer->Password   = MAIL_PASSWORD;
+		
+		// Mailtrap usa TLS en puerto 2525 o 587
+		$port = defined( 'MAIL_PORT' ) ? MAIL_PORT : 2525;
+		if ( $port == 587 || $port == 2525 ) {
+			$phpmailer->SMTPSecure = 'tls';
+		} elseif ( $port == 465 ) {
+			$phpmailer->SMTPSecure = 'ssl';
+		} else {
+			$phpmailer->SMTPSecure = false;
+		}
+		
+		$phpmailer->From       = defined( 'MAIL_FROM_ADDRESS' ) ? MAIL_FROM_ADDRESS : get_option( 'admin_email' );
+		$phpmailer->FromName   = get_bloginfo( 'name' );
+		$phpmailer->SMTPDebug  = 0; // Cambiar a 2 para debug
+	}
+}
+add_action( 'phpmailer_init', 'originaria_configure_smtp' );
+
+/**
+ * Handler del formulario de contacto
+ */
+function originaria_handle_contact_form() {
+	// Verificar nonce
+	if ( ! isset( $_POST['originaria_contact_nonce'] ) || ! wp_verify_nonce( $_POST['originaria_contact_nonce'], 'originaria_contact_form' ) ) {
+		wp_send_json_error( array( 'message' => 'Error de seguridad. Por favor, recarga la página e intenta nuevamente.' ) );
+		return;
+	}
+
+	// Obtener y sanitizar datos
+	$name    = isset( $_POST['name'] ) ? sanitize_text_field( $_POST['name'] ) : '';
+	$email   = isset( $_POST['email'] ) ? sanitize_email( $_POST['email'] ) : '';
+	$subject_form = isset( $_POST['subject'] ) ? sanitize_text_field( $_POST['subject'] ) : '';
+	$message = isset( $_POST['comment'] ) ? sanitize_textarea_field( $_POST['comment'] ) : '';
+
+	// Validar campos requeridos
+	if ( empty( $name ) || empty( $email ) ) {
+		wp_send_json_error( array( 'message' => 'Por favor, completa todos los campos requeridos.' ) );
+		return;
+	}
+
+	// Validar email
+	if ( ! is_email( $email ) ) {
+		wp_send_json_error( array( 'message' => 'Por favor, ingresa un email válido.' ) );
+		return;
+	}
+
+	// Preparar el email (destino: MAIL_TO_ADDRESS o correo del administrador)
+	$to = defined( 'MAIL_TO_ADDRESS' ) ? MAIL_TO_ADDRESS : get_option( 'admin_email' );
+	$email_subject = 'Consulta web'; // Subject fijo
+	$headers = array(
+		'Content-Type: text/html; charset=UTF-8',
+		'From: ' . get_bloginfo( 'name' ) . ' <' . ( defined( 'MAIL_FROM_ADDRESS' ) ? MAIL_FROM_ADDRESS : get_option( 'admin_email' ) ) . '>',
+		'Reply-To: ' . $name . ' <' . $email . '>',
+	);
+
+	// URL del logo
+	$logo_url = get_template_directory_uri() . '/images/logos/logo-color-sin-fondo.png';
+
+	// Construir el cuerpo del mensaje con HTML formateado
+	$email_message = '<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Consulta web</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+	<table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 0;">
+		<tr>
+			<td align="center">
+				<table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+					<!-- Header con logo -->
+					<tr>
+						<td style="background-color: #ffffff; padding: 40px 30px 30px; text-align: center; border-bottom: 2px solid #f0f0f0;">
+							<img src="' . esc_url( $logo_url ) . '" alt="' . esc_attr( get_bloginfo( 'name' ) ) . '" style="max-width: 200px; height: auto;">
+						</td>
+					</tr>
+					<!-- Contenido -->
+					<tr>
+						<td style="padding: 40px 30px;">
+							<h2 style="color: #333333; font-size: 24px; margin: 0 0 30px 0; font-weight: 600;">Nueva consulta desde la web</h2>
+							
+							<table width="100%" cellpadding="0" cellspacing="0">
+								<tr>
+									<td style="padding: 15px 0; border-bottom: 1px solid #eeeeee;">
+										<strong style="color: #666666; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Nombre:</strong>
+										<p style="color: #333333; font-size: 16px; margin: 8px 0 0 0; font-weight: 500;">' . esc_html( $name ) . '</p>
+									</td>
+								</tr>
+								<tr>
+									<td style="padding: 15px 0; border-bottom: 1px solid #eeeeee;">
+										<strong style="color: #666666; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Email:</strong>
+										<p style="color: #333333; font-size: 16px; margin: 8px 0 0 0;">
+											<a href="mailto:' . esc_attr( $email ) . '" style="color: #007bff; text-decoration: none;">' . esc_html( $email ) . '</a>
+										</p>
+									</td>
+								</tr>';
+	
+	if ( ! empty( $subject_form ) ) {
+		$email_message .= '
+								<tr>
+									<td style="padding: 15px 0; border-bottom: 1px solid #eeeeee;">
+										<strong style="color: #666666; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Asunto:</strong>
+										<p style="color: #333333; font-size: 16px; margin: 8px 0 0 0;">' . esc_html( $subject_form ) . '</p>
+									</td>
+								</tr>';
+	}
+	
+	if ( ! empty( $message ) ) {
+		$email_message .= '
+								<tr>
+									<td style="padding: 15px 0;">
+										<strong style="color: #666666; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Mensaje:</strong>
+										<p style="color: #333333; font-size: 16px; margin: 8px 0 0 0; line-height: 1.6; white-space: pre-wrap;">' . nl2br( esc_html( $message ) ) . '</p>
+									</td>
+								</tr>';
+	}
+	
+	$email_message .= '
+							</table>
+						</td>
+					</tr>
+					<!-- Footer -->
+					<tr>
+						<td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #eeeeee;">
+							<p style="color: #999999; font-size: 12px; margin: 0;">Este mensaje fue enviado desde el formulario de contacto de ' . esc_html( get_bloginfo( 'name' ) ) . '</p>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+</body>
+</html>';
+
+	// Enviar el email
+	$sent = wp_mail( $to, $email_subject, $email_message, $headers );
+
+	if ( $sent ) {
+		wp_send_json_success( array( 'message' => 'Mensaje enviado exitosamente, responderemos a la brevedad.' ) );
+	} else {
+		// Obtener el último error de PHPMailer si está disponible
+		global $phpmailer;
+		$error_message = 'Hubo un error al enviar tu mensaje. Por favor, intenta nuevamente más tarde.';
+		if ( isset( $phpmailer ) && ! empty( $phpmailer->ErrorInfo ) ) {
+			$error_message .= ' Error: ' . $phpmailer->ErrorInfo;
+		}
+		wp_send_json_error( array( 'message' => $error_message ) );
+	}
+}
+add_action( 'admin_post_originaria_send_contact_form', 'originaria_handle_contact_form' );
+add_action( 'admin_post_nopriv_originaria_send_contact_form', 'originaria_handle_contact_form' );
+
+/**
+ * JavaScript para manejar el formulario de contacto con AJAX
+ */
+function originaria_contact_form_script() {
+	?>
+	<script type="text/javascript">
+		jQuery(document).ready(function($) {
+			// Interceptar el envío del formulario de contacto
+			$('#contact-form-3').on('submit', function(e) {
+				e.preventDefault();
+				
+				var $form = $(this);
+				var $submitBtn = $form.find('.submit');
+				var $results = $form.find('.form-results');
+				var formData = $form.serialize();
+				
+				// Validación básica del lado del cliente
+				var hasError = false;
+				$form.find('.required').each(function() {
+					var $field = $(this);
+					var value = $field.val().trim();
+					
+					$field.removeClass('required-error');
+					
+					if (!value) {
+						hasError = true;
+						$field.addClass('required-error');
+					} else if ($field.attr('type') === 'email') {
+						var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+						if (!emailPattern.test(value)) {
+							hasError = true;
+							$field.addClass('required-error');
+						}
+					}
+				});
+				
+				if (hasError) {
+					$results.removeClass('d-none alert-success').addClass('alert-danger').html('Por favor, completa todos los campos requeridos correctamente.').fadeIn();
+					return false;
+				}
+				
+				// Deshabilitar botón y mostrar loading
+				$submitBtn.prop('disabled', true).text('Enviando...');
+				$results.removeClass('d-none alert-danger alert-success').html('').css('display', 'none');
+				
+				console.log('Enviando formulario...', formData);
+				console.log('Elemento form-results encontrado:', $results.length);
+				
+				// Enviar formulario vía AJAX
+				$.ajax({
+					url: $form.attr('action'),
+					type: 'POST',
+					data: formData,
+					dataType: 'json',
+					success: function(response) {
+						console.log('Respuesta recibida (success):', response);
+						console.log('Response type:', typeof response);
+						console.log('Response.success:', response ? response.success : 'response es null/undefined');
+						
+						// Limpiar clases previas
+						$results.removeClass('d-none alert-danger alert-success').html('');
+						
+						if (response && response.success === true) {
+							// Éxito
+							var successMessage = (response.data && response.data.message) ? response.data.message : 'Mensaje enviado exitosamente, responderemos a la brevedad.';
+							console.log('Mostrando mensaje de éxito:', successMessage);
+							
+							$results.html(successMessage);
+							$results.addClass('alert-success');
+							$results.removeClass('d-none alert-danger');
+							$results.css({
+								'display': 'block',
+								'visibility': 'visible',
+								'opacity': '1'
+							});
+							
+							$form[0].reset();
+							$form.find('.required-error').removeClass('required-error');
+							
+							// Scroll suave al mensaje
+							setTimeout(function() {
+								$('html, body').animate({
+									scrollTop: $results.offset().top - 50
+								}, 500);
+							}, 100);
+							
+							// Ocultar mensaje después de 8 segundos
+							setTimeout(function() {
+								$results.fadeOut(function() {
+									$(this).addClass('d-none');
+								});
+							}, 8000);
+						} else {
+							// Error en la respuesta
+							console.log('Respuesta no exitosa, mostrando error');
+							var errorMessage = (response && response.data && response.data.message) ? response.data.message : 'Hubo un error al enviar tu mensaje.';
+							$results.html(errorMessage);
+							$results.addClass('alert-danger');
+							$results.removeClass('d-none alert-success');
+							$results.css({
+								'display': 'block',
+								'visibility': 'visible',
+								'opacity': '1'
+							});
+						}
+					},
+					error: function(xhr, status, error) {
+						console.log('Error en AJAX:', status, error);
+						console.log('Response text:', xhr.responseText);
+						console.log('Status code:', xhr.status);
+						
+						// Error de conexión
+						$results.removeClass('d-none alert-success').addClass('alert-danger');
+						var errorMessage = 'Hubo un error al enviar tu mensaje. Por favor, intenta nuevamente más tarde.';
+						
+						// Intentar parsear la respuesta JSON
+						try {
+							if (xhr.responseText) {
+								var jsonResponse = JSON.parse(xhr.responseText);
+								console.log('JSON parseado:', jsonResponse);
+								if (jsonResponse.data && jsonResponse.data.message) {
+									errorMessage = jsonResponse.data.message;
+								} else if (jsonResponse.message) {
+									errorMessage = jsonResponse.message;
+								}
+							}
+						} catch(e) {
+							console.log('Error parseando JSON:', e);
+						}
+						
+						$results.html(errorMessage);
+						$results.css({
+							'display': 'block',
+							'visibility': 'visible',
+							'opacity': '1'
+						});
+					},
+					complete: function() {
+						// Rehabilitar botón
+						$submitBtn.prop('disabled', false).text('enviar mensaje');
+					}
+				});
+				
+				return false;
+			});
+		});
+	</script>
+	<?php
+}
+add_action( 'wp_footer', 'originaria_contact_form_script' );
+
+/**
+ * Configurar PHPMailer para usar SMTP
+ */
+// Función duplicada eliminada - se usa la versión mejorada más arriba
+
+/**
+ * Handler para el formulario de contacto
+ */
+function originaria_send_contact_form() {
+	// Verificar nonce
+	if ( ! isset( $_POST['originaria_contact_nonce'] ) || ! wp_verify_nonce( $_POST['originaria_contact_nonce'], 'originaria_contact_form' ) ) {
+		wp_send_json_error( array( 'message' => 'Error de seguridad. Por favor, intenta nuevamente.' ) );
+		return;
+	}
+
+	// Obtener y sanitizar datos
+	$name    = isset( $_POST['name'] ) ? sanitize_text_field( $_POST['name'] ) : '';
+	$email   = isset( $_POST['email'] ) ? sanitize_email( $_POST['email'] ) : '';
+	$subject = isset( $_POST['subject'] ) ? sanitize_text_field( $_POST['subject'] ) : 'Nueva consulta desde ' . get_bloginfo( 'name' );
+	$message = isset( $_POST['comment'] ) ? sanitize_textarea_field( $_POST['comment'] ) : '';
+
+	// Validar campos requeridos
+	if ( empty( $name ) || empty( $email ) ) {
+		wp_send_json_error( array( 'message' => 'Por favor, completa todos los campos requeridos.' ) );
+		return;
+	}
+
+	// Validar email
+	if ( ! is_email( $email ) ) {
+		wp_send_json_error( array( 'message' => 'Por favor, ingresa un correo electrónico válido.' ) );
+		return;
+	}
+
+	// Preparar el email
+	$to      = defined( 'MAIL_FROM_ADDRESS' ) ? MAIL_FROM_ADDRESS : get_option( 'admin_email' );
+	$headers = array(
+		'Content-Type: text/html; charset=UTF-8',
+		'From: ' . get_bloginfo( 'name' ) . ' <' . ( defined( 'MAIL_FROM_ADDRESS' ) ? MAIL_FROM_ADDRESS : get_option( 'admin_email' ) ) . '>',
+		'Reply-To: ' . $name . ' <' . $email . '>',
+	);
+
+	// Construir el cuerpo del mensaje
+	$email_message = '<html><body>';
+	$email_message .= '<h2>Nueva consulta desde ' . esc_html( get_bloginfo( 'name' ) ) . '</h2>';
+	$email_message .= '<p><strong>Nombre:</strong> ' . esc_html( $name ) . '</p>';
+	$email_message .= '<p><strong>Email:</strong> ' . esc_html( $email ) . '</p>';
+	if ( ! empty( $subject ) ) {
+		$email_message .= '<p><strong>Asunto:</strong> ' . esc_html( $subject ) . '</p>';
+	}
+	if ( ! empty( $message ) ) {
+		$email_message .= '<p><strong>Mensaje:</strong></p>';
+		$email_message .= '<p>' . nl2br( esc_html( $message ) ) . '</p>';
+	}
+	$email_message .= '</body></html>';
+
+	// Enviar el email
+	$sent = wp_mail( $to, $subject, $email_message, $headers );
+
+	if ( $sent ) {
+		wp_send_json_success( array( 'message' => '¡Gracias! Tu mensaje ha sido enviado correctamente. Nos pondremos en contacto contigo pronto.' ) );
+	} else {
+		wp_send_json_error( array( 'message' => 'Hubo un error al enviar tu mensaje. Por favor, intenta nuevamente más tarde.' ) );
+	}
+}
+// Handler duplicado eliminado - se usa originaria_handle_contact_form
+// add_action( 'admin_post_originaria_send_contact_form', 'originaria_send_contact_form' );
+// add_action( 'admin_post_nopriv_originaria_send_contact_form', 'originaria_send_contact_form' );
 

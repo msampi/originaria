@@ -296,7 +296,7 @@ a.text-very-light-gray-hover:hover {color:#ededed !important;}
 /* ===================================
     05. Custom
 ====================================== */
-section {padding: 130px 0; overflow: hidden;}
+section {padding: 60px 0; overflow: hidden;}
 section.big-section {padding:160px 0;}
 section.extra-big-section {padding:200px 0;}
 section.half-section {padding:80px 0;}
@@ -4535,4 +4535,191 @@ body.modal-open {
     .proyecto-slide-item figcaption {
         padding: 15px;
     }
+}
+
+/* ===================================
+    Carousel de Proyectos Bootstrap
+====================================== */
+
+.proyectos-carousel-container {
+    position: relative;
+    padding: 0 60px;
+}
+
+.proyectos-carousel-container .carousel-inner {
+    overflow: visible;
+}
+
+.proyectos-carousel-container .carousel-item {
+    transition: transform 0.6s ease-in-out;
+}
+
+.proyectos-carousel-grid {
+    min-height: 400px;
+}
+
+/* Flechas de navegación personalizadas */
+.proyectos-carousel-prev,
+.proyectos-carousel-next {
+    width: 50px;
+    height: 50px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    border: none;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 1;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.proyectos-carousel-prev:hover,
+.proyectos-carousel-next:hover {
+    background-color: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.proyectos-carousel-prev {
+    left: 0;
+}
+
+.proyectos-carousel-next {
+    right: 0;
+}
+
+.proyectos-carousel-prev .carousel-control-prev-icon,
+.proyectos-carousel-next .carousel-control-next-icon {
+    width: 20px;
+    height: 20px;
+    background-color: #232323;
+    border-radius: 50%;
+    background-size: 60%;
+}
+
+.proyectos-carousel-prev:hover .carousel-control-prev-icon,
+.proyectos-carousel-next:hover .carousel-control-next-icon {
+    background-color: #000000;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .proyectos-carousel-container {
+        padding: 0 50px;
+    }
+}
+
+@media (max-width: 991px) {
+    .proyectos-carousel-container {
+        padding: 0 45px;
+    }
+    
+    .proyectos-carousel-prev,
+    .proyectos-carousel-next {
+        width: 45px;
+        height: 45px;
+    }
+}
+
+@media (max-width: 767px) {
+    .proyectos-carousel-container {
+        padding: 0 40px;
+    }
+    
+    .proyectos-carousel-prev,
+    .proyectos-carousel-next {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .proyectos-carousel-prev .carousel-control-prev-icon,
+    .proyectos-carousel-next .carousel-control-next-icon {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+@media (max-width: 575px) {
+    .proyectos-carousel-container {
+        padding: 0 35px;
+    }
+    
+    .proyectos-carousel-prev,
+    .proyectos-carousel-next {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+/* Sección de contacto - margin top */
+#contacto {
+    margin-top: 60px;
+}
+
+/* ===================================
+    Mensajes del Formulario de Contacto
+====================================== */
+
+.form-results {
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.form-results.alert-success {
+    background-color: #28a745;
+    border: 1px solid #28a745;
+    color: #ffffff;
+    font-weight: 500;
+    margin-top: 20px;
+}
+
+.form-results.alert-danger {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.form-results.d-none {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+.form-results:not(.d-none) {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Estilos para mensajes del formulario de contacto */
+.form-results {
+    padding: 15px 20px;
+    margin-top: 20px;
+    margin-bottom: 0;
+    border-radius: 4px;
+    font-weight: 500;
+    text-align: center;
+    display: block !important;
+}
+
+.form-results.alert-success {
+    background-color: #28a745;
+    color: #ffffff;
+    border: 1px solid #28a745;
+    margin-top: 20px;
+}
+
+.form-results.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.required-error {
+    border-color: #dc3545 !important;
+    background-color: #fff5f5 !important;
 }
