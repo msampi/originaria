@@ -862,18 +862,32 @@ function originaria_contact_form_script() {
 	?>
 	<script type="text/javascript">
 		jQuery(document).ready(function($) {
+			var $form = $('#contact-form-3');
+			if (!$form.length) {
+				return;
+			}
+			// Mensaje de resultado arriba del todo en la caja blanca del formulario
+			var $box = $form.find('.bg-white').first();
+			var $results = $form.find('.form-results').first();
+			if ($box.length && $results.length) {
+				$results.prependTo($box);
+			}
+
 			// Interceptar el envío del formulario de contacto
-			$('#contact-form-3').on('submit', function(e) {
+			$form.on('submit', function(e) {
 				e.preventDefault();
 				
-				var $form = $(this);
-				var $submitBtn = $form.find('.submit');
-				var $results = $form.find('.form-results');
-				var formData = $form.serialize();
+				var $formEl = $(this);
+				var $submitBtn = $formEl.find('.submit');
+				if (!$submitBtn.data('originaria-label')) {
+					$submitBtn.data('originaria-label', $submitBtn.text());
+				}
+				var $resultsEl = $formEl.find('.form-results').first();
+				var formData = $formEl.serialize();
 				
 				// Validación básica del lado del cliente
 				var hasError = false;
-				$form.find('.required').each(function() {
+				$formEl.find('.required').each(function() {
 					var $field = $(this);
 					var value = $field.val().trim();
 					
@@ -892,69 +906,60 @@ function originaria_contact_form_script() {
 				});
 				
 				if (hasError) {
-					$results.removeClass('d-none alert-success').addClass('alert-danger').html('Por favor, completa todos los campos requeridos correctamente.').fadeIn();
+					$resultsEl.removeClass('d-none alert-success').addClass('alert-danger').html('Por favor, completa todos los campos requeridos correctamente.').css('display', 'block').hide().fadeIn();
 					return false;
 				}
 				
 				// Deshabilitar botón y mostrar loading
 				$submitBtn.prop('disabled', true).text('Enviando...');
-				$results.removeClass('d-none alert-danger alert-success').html('').css('display', 'none');
-				
-				console.log('Enviando formulario...', formData);
-				console.log('Elemento form-results encontrado:', $results.length);
+				$resultsEl.removeClass('d-none alert-danger alert-success').html('').css('display', 'none');
 				
 				// Enviar formulario vía AJAX
 				$.ajax({
-					url: $form.attr('action'),
+					url: $formEl.attr('action'),
 					type: 'POST',
 					data: formData,
 					dataType: 'json',
 					success: function(response) {
-						console.log('Respuesta recibida (success):', response);
-						console.log('Response type:', typeof response);
-						console.log('Response.success:', response ? response.success : 'response es null/undefined');
-						
 						// Limpiar clases previas
-						$results.removeClass('d-none alert-danger alert-success').html('');
+						$resultsEl.removeClass('d-none alert-danger alert-success').html('');
 						
 						if (response && response.success === true) {
 							// Éxito
 							var successMessage = (response.data && response.data.message) ? response.data.message : 'Mensaje enviado exitosamente, responderemos a la brevedad.';
-							console.log('Mostrando mensaje de éxito:', successMessage);
 							
-							$results.html(successMessage);
-							$results.addClass('alert-success');
-							$results.removeClass('d-none alert-danger');
-							$results.css({
+							$resultsEl.html(successMessage);
+							$resultsEl.addClass('alert-success');
+							$resultsEl.removeClass('d-none alert-danger');
+							$resultsEl.css({
 								'display': 'block',
 								'visibility': 'visible',
 								'opacity': '1'
 							});
 							
-							$form[0].reset();
-							$form.find('.required-error').removeClass('required-error');
+							$formEl[0].reset();
+							$formEl.find('.required-error').removeClass('required-error');
 							
-							// Scroll suave al mensaje
+							// Scroll suave al mensaje (arriba de la caja)
 							setTimeout(function() {
 								$('html, body').animate({
-									scrollTop: $results.offset().top - 50
+									scrollTop: $resultsEl.offset().top - 80
 								}, 500);
 							}, 100);
 							
 							// Ocultar mensaje después de 8 segundos
 							setTimeout(function() {
-								$results.fadeOut(function() {
-									$(this).addClass('d-none');
+								$resultsEl.fadeOut(function() {
+									$(this).addClass('d-none').css('display', 'none');
 								});
 							}, 8000);
 						} else {
 							// Error en la respuesta
-							console.log('Respuesta no exitosa, mostrando error');
 							var errorMessage = (response && response.data && response.data.message) ? response.data.message : 'Hubo un error al enviar tu mensaje.';
-							$results.html(errorMessage);
-							$results.addClass('alert-danger');
-							$results.removeClass('d-none alert-success');
-							$results.css({
+							$resultsEl.html(errorMessage);
+							$resultsEl.addClass('alert-danger');
+							$resultsEl.removeClass('d-none alert-success');
+							$resultsEl.css({
 								'display': 'block',
 								'visibility': 'visible',
 								'opacity': '1'
@@ -962,39 +967,31 @@ function originaria_contact_form_script() {
 						}
 					},
 					error: function(xhr, status, error) {
-						console.log('Error en AJAX:', status, error);
-						console.log('Response text:', xhr.responseText);
-						console.log('Status code:', xhr.status);
-						
 						// Error de conexión
-						$results.removeClass('d-none alert-success').addClass('alert-danger');
+						$resultsEl.removeClass('d-none alert-success').addClass('alert-danger');
 						var errorMessage = 'Hubo un error al enviar tu mensaje. Por favor, intenta nuevamente más tarde.';
 						
 						// Intentar parsear la respuesta JSON
 						try {
 							if (xhr.responseText) {
 								var jsonResponse = JSON.parse(xhr.responseText);
-								console.log('JSON parseado:', jsonResponse);
 								if (jsonResponse.data && jsonResponse.data.message) {
 									errorMessage = jsonResponse.data.message;
 								} else if (jsonResponse.message) {
 									errorMessage = jsonResponse.message;
 								}
 							}
-						} catch(e) {
-							console.log('Error parseando JSON:', e);
-						}
+						} catch(e) {}
 						
-						$results.html(errorMessage);
-						$results.css({
+						$resultsEl.html(errorMessage);
+						$resultsEl.css({
 							'display': 'block',
 							'visibility': 'visible',
 							'opacity': '1'
 						});
 					},
 					complete: function() {
-						// Rehabilitar botón
-						$submitBtn.prop('disabled', false).text('enviar mensaje');
+						$submitBtn.prop('disabled', false).text($submitBtn.data('originaria-label') || 'enviar mensaje');
 					}
 				});
 				

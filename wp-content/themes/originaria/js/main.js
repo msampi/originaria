@@ -611,10 +611,14 @@
         /* form to email */
         /* contact form validation on submit */
         $(document).on('click', '.submit', function () {
+            var _this = $(this),
+                    formObj = _this.parents('form');
+            /* WordPress: #contact-form-3 usa AJAX desde functions.php (wp_send_json). No interceptar. */
+            if (formObj.attr('id') === 'contact-form-3') {
+                return;
+            }
             var error = false,
                     captchaFlag = false,
-                    _this = $(this),
-                    formObj = _this.parents('form'),
                     emailFormat = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/,
                     telFormat = /[0-9 -()+]+$/,
                     actionURL = formObj.attr('action'),
